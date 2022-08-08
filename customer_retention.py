@@ -25,6 +25,9 @@ def print_1(ti):
 
 def print_2(ti):
     task_logger.info('print2')
+    
+def print_3(ti):
+    task_logger.info('print2')
 
 
 
@@ -44,8 +47,8 @@ with DAG(
         default_args=ARGS,
         description='simpleDagFromAlex',
         catchup=True,
-        start_date=datetime.today() - timedelta(days=8),
-        end_date=datetime.today() - timedelta(days=1),
+        start_date=business_dt,
+        end_date='9999-12-12',
 ) as dag:
     print1_1 = PythonOperator(
         task_id='print_1',
@@ -54,10 +57,14 @@ with DAG(
     print1_2 = PythonOperator(
         task_id='print_2',
         python_callable=print_2)
+    
+    print1_3 = PythonOperator(
+        task_id='print_3',
+        python_callable=print_3)
 
  
     (
-            print1_1 >> print1_2
+            print1_1 >> print1_2 >> print1_3
 
     )
 
