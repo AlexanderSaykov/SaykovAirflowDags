@@ -47,8 +47,8 @@ with DAG(
         default_args=ARGS,
         description='simpleDagFromAlex',
         catchup=True,
-        start_date=business_dt,
-        end_date='9999-12-12',
+        start_date=datetime(2022, 8, 8),
+        end_date=datetime(2023, 7, 1),
 ) as dag:
     print1_1 = PythonOperator(
         task_id='print_1',
