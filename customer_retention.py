@@ -21,6 +21,7 @@ COHORT = '666'
 
 def print_1(ti):
     task_logger.info('print1')
+    task_logger.info('{{ ds }}')
 
 
 def print_2(ti):
