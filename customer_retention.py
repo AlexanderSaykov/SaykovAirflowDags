@@ -19,15 +19,15 @@ NICKNAME = 'AlexSaykov'
 COHORT = '666'
 
 
-def print_1(ti, **ctx):
+def print_1(**ctx):
     task_logger.info('print1')
     task_logger.info(ctx['ds'])
 
 
-def print_2(ti):
+def print_2():
     task_logger.info('print2')
     
-def print_3(ti):
+def print_3():
     task_logger.info('print2')
 
 
