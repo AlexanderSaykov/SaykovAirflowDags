@@ -19,9 +19,9 @@ NICKNAME = 'AlexSaykov'
 COHORT = '666'
 
 
-def print_1(ti):
+def print_1(ti, **ctx):
     task_logger.info('print1')
-    task_logger.info('{{ ds }}')
+    task_logger.info(ctx[‘ds’])
 
 
 def print_2(ti):
