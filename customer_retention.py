@@ -1,71 +1,36 @@
-import time
-import requests
-import json
-import pandas as pd
-import logging
+from datetime import datetime
 
-from datetime import datetime, timedelta
 from airflow import DAG
-from airflow.operators.python_operator import PythonOperator, BranchPythonOperator
+from airflow.models import Variable
 from airflow.providers.postgres.operators.postgres import PostgresOperator
-from airflow.hooks.base import BaseHook
-from airflow.providers.postgres.hooks.postgres import PostgresHook
-from airflow.hooks.http_hook import HttpHook
-
-task_logger = logging.getLogger('airflow.task')
 
 
-NICKNAME = 'AlexSaykov'
-COHORT = '666'
-
-
-def print_1(**ctx):
-    task_logger.info('print1')
-    task_logger.info(ctx['ds'])
-
-
-def print_2():
-    task_logger.info('print2')
-    
-def print_3():
-    task_logger.info('print2')
-
-
-
-ARGS = {
-    "owner": NICKNAME,
-    'email': ['student@example.com'],
-    'email_on_failure': False,
-    'email_on_retry': False,
-    'retries': 1
-}
-
-
-business_dt = '{{ ds }}'
 
 with DAG(
-        'simpleDagFromAlex',
-        default_args=ARGS,
-        description='simpleDagFromAlex',
-        catchup=True,
-        start_date=datetime(2022, 8, 8),
-        end_date=datetime(2023, 7, 1),
+    dag_id='insert_rate_test',
+    schedule_interval='@hourly',
+    catchup=False,
+    start_date=datetime(2022, 7, 1),
+    tags=['update', 'tempus', 'sql'],
+    template_searchpath='/opt/airflow/dags/internal-bi-project'
 ) as dag:
-    print1_1 = PythonOperator(
-        task_id='print_1',
-        python_callable=print_1)
+    query = PostgresOperator(
+        task_id='insert_rate_test',
+        postgres_conn_id='bi',
+        sql="""insert into project.rates_test(resource_uid, start_date, end_date, rate, rate_overtime, sys_update_on)
+  values('dcf6bb63-0f08-e911-9218-005056bc1e6d',
+             current_date,
+             null,
+             600,
+             1500,
+             now())
+             on conflict(resource_uid)  do update set
 
-    print1_2 = PythonOperator(
-        task_id='print_2',
-        python_callable=print_2)
-    
-    print1_3 = PythonOperator(
-        task_id='print_3',
-        python_callable=print_3)
-
- 
-    (
-            print1_1 >> print1_2 >> print1_3
-
+             resource_uid = excluded.resource_uid,
+             start_date = excluded.start_date,
+             end_date =excluded. end_date,
+             rate = excluded.rate,
+             rate_overtime = excluded.rate_overtime,
+             sys_update_on = excluded.sys_update_on;
+ """
     )
-
