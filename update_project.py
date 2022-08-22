@@ -39,7 +39,7 @@ with DAG(
     update_rates = PostgresOperator(
         task_id='update_rates',
         postgres_conn_id='bi',
-        sql="""project.rates_insert()""",
+        sql="""call project.rates_insert()""",
          autocommit = True
     )
 
