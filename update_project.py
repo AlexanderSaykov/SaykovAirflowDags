@@ -67,7 +67,7 @@ with DAG(
     update_timesheet_status = PostgresOperator(
         task_id='update_timesheet_status',
         postgres_conn_id='bi',
-        sql="""call timesheet_status_insert()""",
+        sql="""call project.timesheet_status_insert()""",
          autocommit = True
 
     )
