@@ -61,18 +61,18 @@ with DAG(
         autocommit=True
     )
 
-    update_timesheet_status = PostgresOperator(
-        task_id='update_timesheet_status',
+    update_timesheet_statuses = PostgresOperator(
+        task_id='update_timesheet_statuses',
         postgres_conn_id='bi',
-        sql="""call project.timesheet_status_insert()""",
+        sql="""call project.timesheet_statuses_insert()""",
         autocommit=True
 
     )
 
-    update_timesheet_line_status = PostgresOperator(
-        task_id='update_timesheet_line_status',
+    update_timesheet_line_statuses = PostgresOperator(
+        task_id='update_timesheet_line_statuses',
         postgres_conn_id='bi',
-        sql="""call project.timesheet_line_status_insert()""",
+        sql="""call project.timesheet_line_statuses_insert()""",
         autocommit=True
     )
 
@@ -93,5 +93,5 @@ with DAG(
 update_departments >> update_resources_mapping \
 >> update_resources >> update_rates >> update_projects \
 >> update_tasks >> update_assignments \
->> update_timesheet_status >> update_timesheet_line_status \
+>> update_timesheet_statuses >> update_timesheet_line_statuses \
 >> update_timesheet_lines >> update_facts
