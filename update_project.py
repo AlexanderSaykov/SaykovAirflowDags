@@ -90,7 +90,7 @@ with DAG(
         autocommit=True
     )
 
-update_departments >> update_resource_id_mapping \
+update_departments >> update_resources_mapping \
 >> update_resources >> update_rates >> update_projects \
 >> update_tasks >> update_assignments \
 >> update_timesheet_status >> update_timesheet_line_status \
