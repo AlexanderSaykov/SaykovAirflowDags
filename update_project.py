@@ -19,13 +19,6 @@ with DAG(
         autocommit=True
     )
 
-    update_resources_mapping = PostgresOperator(
-        task_id='update_resources_mapping',
-        postgres_conn_id='bi',
-        sql="""call project.resources_mapping_insert()""",
-        autocommit=True
-    )
-
     update_resources = PostgresOperator(
         task_id='update_resources',
         postgres_conn_id='bi',
@@ -90,7 +83,7 @@ with DAG(
         autocommit=True
     )
 
-update_departments >> update_resources_mapping \
+update_departments  \
 >> update_resources >> update_rates >> update_projects \
 >> update_tasks >> update_assignments \
 >> update_timesheet_statuses >> update_timesheet_line_statuses \
