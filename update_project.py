@@ -4,6 +4,7 @@ from airflow import DAG
 from airflow.models import Variable
 from airflow.providers.postgres.operators.postgres import PostgresOperator
 
+
 with DAG(
         dag_id='update_project',
         schedule_interval='@hourly',
@@ -23,13 +24,6 @@ with DAG(
         task_id='update_resources',
         postgres_conn_id='bi',
         sql="""call project.resources_insert()""",
-        autocommit=True
-    )
-
-    update_rates = PostgresOperator(
-        task_id='update_rates',
-        postgres_conn_id='bi',
-        sql="""call project.rates_insert()""",
         autocommit=True
     )
 
@@ -84,7 +78,7 @@ with DAG(
     )
 
 update_departments  \
->> update_resources >> update_rates >> update_projects \
+>> update_resources  >> update_projects \
 >> update_tasks >> update_assignments \
 >> update_timesheet_statuses >> update_timesheet_line_statuses \
 >> update_timesheet_lines >> update_facts
