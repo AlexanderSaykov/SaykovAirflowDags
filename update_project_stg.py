@@ -37,6 +37,14 @@ def upload_data(table_name, df):
             start = end + 1
         print('load complete')
 
+def truncate_data(table_name):
+    cursor = pg_connect.cursor()
+    postgres_insert_query = f"""TRUNCATE TABLE project_stg.{table_name}"""
+    cursor.execute(postgres_insert_query)
+    pg_connect.commit()
+    pg_connect.close()
+
+
 
 def update_facts_stg():
     columns = ['task_name', 'task_start_date', 'task_finish_date', 'arf_code', 'time_by_day', 'pr_comment',
@@ -86,14 +94,87 @@ def update_facts_stg():
     cursor.close()
     mssql_connect.close()
 
-    cursor = pg_connect.cursor()
-
-    postgres_insert_query = """TRUNCATE TABLE project_stg.facts"""
-    cursor.execute(postgres_insert_query)
-    pg_connect.commit()
-    pg_connect.close()
-
+    truncate_data('facts')
     upload_data('facts', df)
+
+
+def update_resources_stg():
+    columns = ['resource_uid', 'resource_id', 'resource_name', 'rate', 'rate_overtime', 'max_units', 'is_person',
+               'resource_type', 'department', 'creation_date', 'hire_date', 'last_modified_date', 'last_activity_date',
+               'termination_date', 'timesheet_manager_resource_uid']
+    cursor = mssql_connect.cursor()
+    cursor.execute("""select
+    [RES_UID] as resouce_uid,
+    [RES_ID] as resource_id,
+    [RES_TIMESHEET_MGR_UID] as timesheet_manager_resource_uid,
+    [RES_NAME] as resource_name,
+    [RES_GROUP] as department,
+    [RES_TYPE] as resource_type,
+    [RES_STD_RATE] as rate,
+    [RES_OVT_RATE] as rate_overtime,
+    [RES_MAX_UNITS] as max_units,
+    [RES_IS_WINDOWS_USER] as is_person,
+    [CREATED_DATE] as creation_date,
+    [WRES_LAST_CONNECT_DATE] as last_activity_date,
+    [MOD_DATE] as last_modified_date,
+    [RES_HIRE_DATE] as hire_date,
+    [RES_TERMINATION_DATE] as termination_date
+from
+    [PWA_Content].[pjpub].[MSP_RESOURCES]""")
+
+    data = cursor.fetchall()
+    df = pd.DataFrame(data, columns=columns)
+    cursor.close()
+    mssql_connect.close()
+
+
+
+    truncate_data('resources')
+    upload_data('resources', df)
+
+
+
+def update_projects_stg():
+    columns = ['uid','name','project_manager',
+               'start_date','finish_date','created_date',
+               'modified_date','actual_start_date','actual_finish_date',
+               'percent_completed','percent_work_completed','arf_stage','class','status',
+               'is_archived','work','actual_work','overtime_work']
+
+    cursor = mssql_connect.cursor()
+    cursor.execute("""SELECT
+  [ProjectUID] as uid,
+  p1.[ProjectName] as name,
+  p1.[ProjectOwnerName] as project_manager,
+  p1.[ProjectStartDate] as start_date,
+  p1.[ProjectFinishDate] as finish_date,
+  p1.[ProjectCreatedDate] as created_date,
+  p1.[ProjectModifiedDate] as modified_date,
+  p1.[ProjectActualStartDate] as actual_start_date,
+  p1.[ProjectActualFinishDate] as actual_finish_date,
+  p1.[ProjectPercentCompleted] as percent_completed,
+  p1.[ProjectPercentWorkCompleted] as percent_work_completed,
+  p1.[Этап АРФ] as arf_stage,
+  p1.[Класс производственного проекта] as class,
+  p1.[Статус производственного проекта] as status,
+  p1.[Переведен в архив] as is_archived,
+  p2.[ProjectWork] as work,
+  p2.[ProjectActualWork] as actual_work,
+  p2.[ProjectActualOvertimeWork] as overtime_work
+FROM
+  [PWA_CustomReports].[dbo].[Project_list_for_backup_select] p1 
+  left join [PWA_CustomReports].[dbo].[PowerBI_PWA_ProjectsInfo] p2 on p1.ProjectName = p2.ProjectName""")
+
+    data = cursor.fetchall()
+    df = pd.DataFrame(data, columns=columns)
+    cursor.close()
+    mssql_connect.close()
+
+
+
+    truncate_data('projects')
+    upload_data('projects', df)
+
 
 
 with DAG(
@@ -104,7 +185,13 @@ with DAG(
         tags=['update', 'project', 'sql', 'stg'],
         template_searchpath='/opt/airflow/dags/internal-bi-project'
 ) as dag:
-    update_departments = PythonOperator(task_id='update_facts_stg',
+    update_facts_stg = PythonOperator(task_id='update_facts_stg',
                                         python_callable=update_facts_stg)
 
-update_departments
+    update_resources_stg = PythonOperator(task_id='update_resources_stg',
+                                        python_callable=update_resources_stg)
+    
+    update_projects_stg = PythonOperator(task_id='update_projects_stg',
+                                        python_callable=update_projects_stg)
+
+update_facts_stg >> update_resources_stg >> update_projects_stg
