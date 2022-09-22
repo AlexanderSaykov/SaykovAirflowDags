@@ -27,7 +27,7 @@ engine = create_engine('postgresql://postgres:postgres@resman-02.vm.cmx.ru:5432/
 
 def upload_data(table_name, df):
     num_rows = len(df)
-    chunk_size = 50000
+    chunk_size = num_rows/5
     with engine.connect() as conn:
         start = 0
         while start <= num_rows:
